@@ -16,8 +16,7 @@ class UnicodeStringReverter {
         free_space_in_front_(0),
         free_space_in_back_(0),
         index_of_empty_space_in_front_(0),
-        index_of_empty_space_in_back_(data.length()),
-        allow_overwrite_(false) {}
+        index_of_empty_space_in_back_(data.length()) {}
 
   void FillBackBuffer() {
     int32_t current_letter_index = fwd_iter_->current();
@@ -41,8 +40,7 @@ class UnicodeStringReverter {
 
   void ReleaseFrontBuffer() {
     while (!front_buffer_.empty() &&
-           (allow_overwrite_ ||
-            free_space_in_front_ >= front_buffer_.front().length())) {
+           free_space_in_front_ >= front_buffer_.front().length()) {
       size_t subsequence_len = front_buffer_.front().length();
       data_.replace(index_of_empty_space_in_front_,
                     subsequence_len,
@@ -55,8 +53,7 @@ class UnicodeStringReverter {
 
   void ReleaseBackBuffer() {
     while (!back_buffer_.empty() &&
-           (allow_overwrite_ ||
-            free_space_in_back_ >= back_buffer_.front().length())) {
+           free_space_in_back_ >= back_buffer_.front().length()) {
       size_t subsequence_len = back_buffer_.front().length();
       data_.replace(index_of_empty_space_in_back_ - subsequence_len,
                     subsequence_len,
@@ -100,10 +97,11 @@ class UnicodeStringReverter {
         break;
     }
 
-    // All data is stored in buffers, so we are free to overwrite in some corner cases.
-    allow_overwrite_ = true;
-
+    // All data is stored in buffers, so free space in front and back is common.
+    free_space_in_front_ += free_space_in_back_;
     ReleaseFrontBuffer();
+
+    free_space_in_back_ = free_space_in_front_;
     ReleaseBackBuffer();
   }
 
@@ -119,6 +117,4 @@ class UnicodeStringReverter {
   icu::UnicodeString& data_;
   std::queue<icu::UnicodeString> front_buffer_;
   std::queue<icu::UnicodeString> back_buffer_;
-
-  bool allow_overwrite_;
 };
